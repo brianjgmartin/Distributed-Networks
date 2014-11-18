@@ -1,0 +1,8 @@
+module MemoryApp { 
+	interface Memory { 
+		boolean login(in string name, in string password);
+		void register(in string username, in string password);
+		void addmemory(in string memory, in string username);
+		void addResource(in string resource, in string memory);
+		}; 
+	};
