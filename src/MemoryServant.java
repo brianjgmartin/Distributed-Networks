@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import MemoryApp._MemoryImplBase;
 
@@ -14,6 +15,7 @@ class MemoryServant extends _MemoryImplBase {
 	private static final String USERNAME = "root";
 	private static final String PASSWORD = "root";
 	private static final String CONN_STRING = "jdbc:mysql://localhost/MemoryCatcher";
+	public String currentUser="";
 
 	public static void main(String[] args) throws ClassNotFoundException {
 		// //Class.forName("con.mysql.jdbc.driver");
@@ -25,6 +27,7 @@ class MemoryServant extends _MemoryImplBase {
 		// TODO Auto-generated method stub
 		Connection conn = null;
 		Statement stmt = null;
+		currentUser = username;
 		try {
 			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
 			System.out.println("connected Memories");
@@ -52,40 +55,37 @@ class MemoryServant extends _MemoryImplBase {
 		}
 
 	}
-
+    
+	public String getUser(){
+		return currentUser;
+	}
+	
 	public boolean login(String username, String password) {
 		Connection conn = null;
 		Statement stmt = null;
-		boolean log = false;;
+		currentUser = username;
+		System.out.println(currentUser);
+		boolean log = false;
 		try{
 			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
 		System.out.println("connected Tble");
 		//STEP 4: Execute a query
-	      
+	      System.out.println("Login...");
 	      stmt = conn.createStatement();
 
-	      String sql = "SELECT * FROM Users WHERE USERNAME = '"+username+"'";
+	      String sql = "SELECT * FROM Users WHERE USERNAME = '"+username+"'"
+		      		+ "and passwd = '"+password+"'";
 	      				
 	      ResultSet rs=stmt.executeQuery(sql);
 	      //System.out.println(rs);
-	      //System.out.println(rs);
-	      while(rs.next()){
-	          //Retrieve by column name
-	          int id  = rs.getInt("U_ID");
-	        //Display values
-	          if(id > 0 ){
-	          log = true;   
-	          System.out.println("cool registered");
-	          break;
+	      if(rs.next()){
+	         log = true;
 	          }
 	          else {
 	        	  log = false;
-	        	  System.out.println("not registered");
-	        	  break;
-	          }
-	          } 
 	        	 
 	     
+	          }
 	      rs.close();
 
 		
@@ -102,11 +102,10 @@ class MemoryServant extends _MemoryImplBase {
 				}
 				
 			}
-		} 
-		return log;
+		} return log;
 }
 
-	public void addmemory(String memory, String username) {
+	public void addMemory(String memory) {
 		Connection conn = null;
 		Statement stmt = null;
 		try {
@@ -118,7 +117,7 @@ class MemoryServant extends _MemoryImplBase {
 
 			String sql = "INSERT INTO Memories(Memory,U_ID) " + "VALUES ('"
 					+ memory + "',(Select U_ID from users where USERNAME = '"
-					+ username + "'))";
+					+ getUser() + "'))";
 			stmt.executeUpdate(sql);
 			System.out.println("Congrats you have added a memory");
 		} catch (SQLException e) {
@@ -135,6 +134,34 @@ class MemoryServant extends _MemoryImplBase {
 			}
 		}
 	}
+	public void deleteMemory(String memory){
+		Connection conn = null;
+		Statement stmt = null;
+		try{
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+	
+	      stmt = conn.createStatement();
+	      
+	      String sql = "DELETE FROM Memories "
+	      		+ "where memory = '"+memory+"'"
+	      				+ "and U_ID = (select U_ID from users where username ='"+getUser()+"')";
+	      stmt.executeUpdate(sql);
+	      
+		}
+		catch(SQLException e){
+			System.err.println(e);
+		}finally{
+			if(conn != null){
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		}
+	}
+	
 	public void addResource(String resource, String memory){
 		Connection conn = null;
 		Statement stmt = null;
@@ -166,17 +193,18 @@ class MemoryServant extends _MemoryImplBase {
 	      stmt.executeUpdate(sql);
 	      
 	      sql = "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID = (SELECT U_ID FROM Memories where Memory = '"+memory+"') ";
-	       rs = stmt.executeQuery(sql);
+	    rs = stmt.executeQuery(sql);
+	     rs= stmt.executeQuery(sql);
 	      while(rs.next()){
-	          //Retrieve by column name
-	          int id  = rs.getInt("Resource_Points");
+	         // Retrieve by column name
+	           int id  = rs.getInt("Resource_Points");
 	          id =id -2;
-	          System.out.println(id);
+	          System.out.println(id+"mm");
 	      
 	      
        sql = "UPDATE Users " +
-                   "SET Resource_Points = "+id+" ";
-                   		//+ "where(SELECT U_ID FROM Memories where '"+memory+"'='"+memory+"'";
+                   "SET Resource_Points = "+id+" "
+                   		+ "where U_ID = (SELECT U_ID FROM Memories where'"+memory+"' = '"+memory+"')";
        }
 	      rs.close();
       stmt.executeUpdate(sql);
@@ -202,4 +230,40 @@ class MemoryServant extends _MemoryImplBase {
 			}
 		}
 	}
+	
+	public  String viewMemories(){
+		Connection conn = null;
+		Statement stmt = null;
+		
+		String result = "";
+		
+		try{
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+	
+	      stmt = conn.createStatement();
+	      
+	      String sql = "Select memory FROM Memories "
+	      		+ "where U_ID = (SELECT U_ID from Users where username ='"+getUser()+"')";
+	   ResultSet  rs = stmt.executeQuery(sql);
+	   while(rs.next()){
+		  
+		   result = rs.getString(1) + " " + result;	          
+	   }
+	
+	      
+		}
+		catch(SQLException e){
+			System.err.println(e);
+		}finally{
+			if(conn != null){
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		}return "Your current stored Memories are" + "\n"
+				+result;
+		}
 }
