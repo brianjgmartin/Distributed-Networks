@@ -1,8 +1,15 @@
-module MemoryApp { 
-	interface Memory { 
+module MemoryApp {
+
+typedef sequence<string> mArray;
+ 
+	interface Memory {
+	 
 		boolean login(in string name, in string password);
 		void register(in string username, in string password);
-		void addmemory(in string memory, in string username);
+		void addMemory(in string memory);
 		void addResource(in string resource, in string memory);
+		string getUser();
+		void deleteMemory(in string memory);
+		string viewMemories();
 		}; 
 	};

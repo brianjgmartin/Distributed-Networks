@@ -5,7 +5,7 @@ import java.io.*;
 
 public class MemoryClient {
 	
-	static boolean flag = true;
+	static boolean flag = false;
 
 	// Add the main method here in the next step.
 
@@ -24,11 +24,6 @@ public class MemoryClient {
 			Memory MemoryRef = MemoryHelper.narrow(obj);
 			//Call theoperation on the servant
 
-			// fundraisingRef.donate(10);
-			// MemoryRef.register("nn","kk");
-
-			//double  balance = fundraisingRef.getBalance();
-			//System.out.println(balance);
 
 			BufferedReader userEntry = new BufferedReader(new InputStreamReader(System.in));
 			char menuChoice;
@@ -51,35 +46,26 @@ public class MemoryClient {
 		                    System.out.println("Please enter your password");
 		                    String password = userEntry.readLine();
 		                    flag = MemoryRef.login(username,password);
+		                    if(flag==false){
+		                    	System.out.println(username+" is not Registered on the system");
+		                    	System.out.println("You must Register before logging in");
+		                    }
+		                    else{
+		                    	System.out.println("Welcome "+ username);
+		                    }
 						}
-//						if (menuChoice==(char)'3') {
-//							System.out.println("Please enter Your UserName");
-//		                    String username = userEntry.readLine();
-//		                    System.out.println("Please enter your Memory");
-//		                    String memory = userEntry.readLine();
-//							MemoryRef.addmemory(memory,username);
-//						}
-//						if (menuChoice==(char)'4') {
-//							System.out.println("Please enter Your resource");
-//		                    String resource = userEntry.readLine();
-//		                    System.out.println("Please enter your Memory");
-//		                    String memory = userEntry.readLine();
-//							MemoryRef.addResource(resource,memory);
-//						}
-						
 
-			} while (flag=false );
+			} while (flag==false);
+			
 			do{
 				System.out.println("Menu");
-				System.out.println("1 Add Memory: 2 Add Resource to Memory: 3 Quit");
+				System.out.println("1 Add Memory: 2 Add Resource to Memory: 3 Delete Memory: 4 View Your Memories : 5 QUIT");
 				menuChoice = (char)(System.in.read());
 	            userEntry.readLine(); //Need to clear the out the buffe
 	            if (menuChoice==(char)'1') {
-					System.out.println("Please enter Your UserName");
-                    String username = userEntry.readLine();
                     System.out.println("Please enter your Memory");
                     String memory = userEntry.readLine();
-					MemoryRef.addmemory(memory,username);
+					MemoryRef.addMemory(memory);
 				}
 				if (menuChoice==(char)'2') {
 					System.out.println("Please enter Your resource");
@@ -88,8 +74,16 @@ public class MemoryClient {
                     String memory = userEntry.readLine();
 					MemoryRef.addResource(resource,memory);
 				}
+				if (menuChoice==(char)'3') {
+					System.out.println("Please enter The Memory you would like to remove");
+                    String memory = userEntry.readLine();
+					MemoryRef.deleteMemory(memory);
+				}
+				if (menuChoice==(char)'4') {
+					System.out.println(MemoryRef.viewMemories());
+				}
 			}
-			while(menuChoice!=(char)'3');
+			while(menuChoice!=(char)'5');
 		
 			
 
