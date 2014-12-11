@@ -5,7 +5,7 @@ import org.omg.CORBA.*;
 // needed for output to the file system.
 import java.io.*;
 
-
+ 
 public class MemoryServer {
 	// Add the main method here in the next step.
 

@@ -15,7 +15,7 @@ class MemoryServant extends _MemoryImplBase {
 	private static final String USERNAME = "root";
 	private static final String PASSWORD = "root";
 	private static final String CONN_STRING = "jdbc:mysql://localhost/MemoryCatcher";
-	public String currentUser="";
+	public String currentUser = "";
 
 	public static void main(String[] args) throws ClassNotFoundException {
 		// //Class.forName("con.mysql.jdbc.driver");
@@ -55,55 +55,83 @@ class MemoryServant extends _MemoryImplBase {
 		}
 
 	}
-    
-	public String getUser(){
+
+	public String getUser() {
 		return currentUser;
 	}
-	
-	public boolean login(String username, String password) {
+
+	public int getUserID() {
 		Connection conn = null;
 		Statement stmt = null;
-		currentUser = username;
-		System.out.println(currentUser);
-		boolean log = false;
-		try{
+		int result = 0;
+
+		try {
 			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
-		System.out.println("connected Tble");
-		//STEP 4: Execute a query
-	      System.out.println("Login...");
-	      stmt = conn.createStatement();
+			stmt = conn.createStatement();
+			String sql = "select U_ID from USERS " + "where username =  '"
+					+ getUser() + "'";
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
 
-	      String sql = "SELECT * FROM Users WHERE USERNAME = '"+username+"'"
-		      		+ "and passwd = '"+password+"'";
-	      				
-	      ResultSet rs=stmt.executeQuery(sql);
-	      //System.out.println(rs);
-	      if(rs.next()){
-	         log = true;
-	          }
-	          else {
-	        	  log = false;
-	        	 
-	     
-	          }
-	      rs.close();
-
-		
-		}
-		catch(SQLException e){
+				result = rs.getInt(1);
+			}
+		} catch (SQLException e) {
 			System.err.println(e);
-		}finally{
-			if(conn != null){
+		} finally {
+			if (conn != null) {
 				try {
 					conn.close();
 				} catch (SQLException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 			}
-		} return log;
-}
+		}
+		return result;
+	}
+
+	public boolean login(String username, String password) {
+		Connection conn = null;
+		Statement stmt = null;
+		currentUser = username;
+		System.out.println(currentUser);
+		boolean log = false;
+		try {
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+			System.out.println("connected Tble");
+			// STEP 4: Execute a query
+			System.out.println("Login...");
+			stmt = conn.createStatement();
+
+			String sql = "SELECT * FROM Users WHERE USERNAME = '" + username
+					+ "'" + "and passwd = '" + password + "'";
+
+			ResultSet rs = stmt.executeQuery(sql);
+			// System.out.println(rs);
+			if (rs.next()) {
+				log = true;
+			} else {
+				log = false;
+
+			}
+			rs.close();
+
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+		}
+		return log;
+	}
 
 	public void addMemory(String memory) {
 		Connection conn = null;
@@ -134,136 +162,325 @@ class MemoryServant extends _MemoryImplBase {
 			}
 		}
 	}
-	public void deleteMemory(String memory){
+
+	public void deleteMemory(String memory) {
 		Connection conn = null;
 		Statement stmt = null;
-		try{
+		try {
 			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
-	
-	      stmt = conn.createStatement();
-	      
-	      String sql = "DELETE FROM Memories "
-	      		+ "where memory = '"+memory+"'"
-	      				+ "and U_ID = (select U_ID from users where username ='"+getUser()+"')";
-	      stmt.executeUpdate(sql);
-	      
-		}
-		catch(SQLException e){
+
+			stmt = conn.createStatement();
+
+			String sql = "DELETE FROM Memories " + "where memory = '" + memory
+					+ "'"
+					+ "and U_ID = (select U_ID from users where username ='"
+					+ getUser() + "')";
+			stmt.executeUpdate(sql);
+
+		} catch (SQLException e) {
 			System.err.println(e);
-		}finally{
-			if(conn != null){
+		} finally {
+			if (conn != null) {
 				try {
 					conn.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-				
+
 			}
 		}
 	}
-	
-	public void addResource(String resource, String memory){
+
+	public void addResource(String resource, String memory) {
 		Connection conn = null;
 		Statement stmt = null;
 		int rp;
 		boolean flag = false;
-		
-		try{
+
+		try {
 			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
-	      stmt = conn.createStatement();
-	      String sql =  "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID = (SELECT U_ID FROM Memories where Memory = '"+memory+"') ";
-	      ResultSet rs = stmt.executeQuery(sql);
-	      while(rs.next()){
-	          //Retrieve by column name
-	           rp  = rs.getInt("Resource_Points");
-	         System.out.println(rp);
-	         if (rp > 2){
-	        	 flag = true;
-	         }
-	         else {
-	        	 System.out.println("Sorry you do not have enough points");
-	         }
-	      }
-	         
-	      
-	    	 
-	     do {
-	       sql = "INSERT INTO Resources(Resource,M_ID) " +
-                   "VALUES ('"+resource+"',(Select M_ID from Memories where Memory = '"+memory+"'))";
-	      stmt.executeUpdate(sql);
-	      
-	      sql = "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID = (SELECT U_ID FROM Memories where Memory = '"+memory+"') ";
-	    rs = stmt.executeQuery(sql);
-	     rs= stmt.executeQuery(sql);
-	      while(rs.next()){
-	         // Retrieve by column name
-	           int id  = rs.getInt("Resource_Points");
-	          id =id -2;
-	          System.out.println(id+"mm");
-	      
-	      
-       sql = "UPDATE Users " +
-                   "SET Resource_Points = "+id+" "
-                   		+ "where U_ID = (SELECT U_ID FROM Memories where'"+memory+"' = '"+memory+"')";
-       }
-	      rs.close();
-      stmt.executeUpdate(sql);
-      flag = false;
-	      
-	      System.out.println("Congrats you have added a resource");
-	    // while goes here 
-	     }while (flag);
-	    
-	      }
-		
-		catch(SQLException e){
+			stmt = conn.createStatement();
+			String sql = "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID = (SELECT U_ID FROM Memories where Memory = '"
+					+ memory + "') ";
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				// Retrieve by column name
+				rp = rs.getInt("Resource_Points");
+				System.out.println(rp);
+				if (rp > 2) {
+					flag = true;
+				} else {
+					System.out.println("Sorry you do not have enough points");
+				}
+			}
+rs.close();
+			do {
+				sql = "INSERT INTO Resources(Resource,M_ID) " + "VALUES ('"
+						+ resource
+						+ "',(Select M_ID from Memories where Memory = '"
+						+ memory + "'))";
+				stmt.executeUpdate(sql);
+
+				sql = "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID ="
+						+ " (SELECT U_ID FROM Memories where Memory = '"
+						+ memory + "') ";
+				rs = stmt.executeQuery(sql);
+				rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					// Retrieve by column name
+					int id = rs.getInt("Resource_Points");
+					id = id - 2;
+					System.out.println(id + "mm");
+
+					sql = "UPDATE Users " + "SET Resource_Points = " + id + " "
+							+ "where U_ID = (SELECT U_ID FROM Memories where'"
+							+ memory + "' = '" + memory + "')";
+				}
+				rs.close();
+				stmt.executeUpdate(sql);
+				flag = false;
+
+				System.out.println("Congrats you have added a resource");
+				// while goes here
+			} while (flag);
+
+		}
+
+		catch (SQLException e) {
 			System.err.println(e);
-		}finally{
-			if(conn != null){
+		} finally {
+			if (conn != null) {
 				try {
 					conn.close();
 				} catch (SQLException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 			}
 		}
 	}
-	
-	public  String viewMemories(){
+
+	public String viewMemories() {
 		Connection conn = null;
 		Statement stmt = null;
-		
+
 		String result = "";
-		
-		try{
+
+		try {
 			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
-	
-	      stmt = conn.createStatement();
-	      
-	      String sql = "Select memory FROM Memories "
-	      		+ "where U_ID = (SELECT U_ID from Users where username ='"+getUser()+"')";
-	   ResultSet  rs = stmt.executeQuery(sql);
-	   while(rs.next()){
-		  
-		   result = rs.getString(1) + " " + result;	          
-	   }
-	
-	      
-		}
-		catch(SQLException e){
+
+			stmt = conn.createStatement();
+
+			String sql = "Select memory FROM Memories "
+					+ "where U_ID = (SELECT U_ID from Users where username ='"
+					+ getUser() + "')";
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+
+				result = rs.getString(1) + " " + result;
+			}
+
+		} catch (SQLException e) {
 			System.err.println(e);
-		}finally{
-			if(conn != null){
+		} finally {
+			if (conn != null) {
 				try {
 					conn.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-				
+
 			}
-		}return "Your current stored Memories are" + "\n"
-				+result;
 		}
+		return "Your current stored Memories are" + "\n" + result;
+	}
+
+	public void sendInvite(String friendUsername) {
+		Connection conn = null;
+		Statement stmt = null;
+
+		try {
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+			stmt = conn.createStatement();
+
+			stmt = conn.createStatement();
+			String sql = "INSERT INTO Friends(Sender_ID,Friend_ID,Request,status)"
+					+ "VALUES ('"
+					+ getUserID()
+					+ "',(SELECT U_ID from Users where username = '"
+					+ friendUsername + "'),1,0)";
+
+			stmt.executeUpdate(sql);
+
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+
+			}
+
+		}
+	}
+
+	public boolean viewInvites() {
+		Connection conn = null;
+		Statement stmt = null;
+		boolean flag = false;
+
+		try {
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+			stmt = conn.createStatement();
+
+			String sql = "Select request from friends " + "where FRIEND_ID = '"
+					+ getUserID() + "'" + "and status = 0";
+
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				int id = rs.getInt("Request");
+				if (id != 0) {
+					flag = true;
+				} else {
+					flag = false;
+				}
+			}
+
+		} catch (SQLException e) {
+
+			System.err.println(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}
+		return flag;
+	}
+
+	public String viewInviteSender() {
+		Connection conn = null;
+		Statement stmt = null;
+		String sender = "";
+
+		try {
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+			stmt = conn.createStatement();
+
+			String sql = "Select username from users "
+					+ "where U_ID = (Select sender_ID from friends)";
+
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				sender = rs.getString(1);
+				;
+
+			}
+
+		} catch (SQLException e) {
+
+			System.err.println(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}
+		return sender;
+	}
+
+	public void acceptInvite() {
+
+		Connection conn = null;
+		Statement stmt = null;
+
+		try {
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+			stmt = conn.createStatement();
+
+			String sql = " Update Friends "
+			+ "set status = 1";
+			//+ "where F_ID=1";
+			
+			stmt.executeUpdate(sql);
+			
+			stmt = conn.createStatement();
+			sql = "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID ="
+					+ " (SELECT Sender_Id FROM friends) ";
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				// Retrieve by column name
+				int points = rs.getInt("Resource_Points");
+				points = points + 10;
+				System.out.println(points + "mm");
+
+				sql = "UPDATE Users " + "SET Resource_Points = " + points + " "
+						+ "where U_ID = (SELECT Sender_ID FROM Friends )";
+			}
+			rs.close();
+			stmt.executeUpdate(sql);
+			
+
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+		}
+	}
+	public int viewPoints() {
+		Connection conn = null;
+		Statement stmt = null;
+		int points = 0;
+
+		try {
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+			stmt = conn.createStatement();
+
+			String sql = "Select resource_points from users "
+					+ "where U_ID = '"+getUserID()+"'";
+
+			ResultSet rs=stmt.executeQuery(sql);
+			while(rs.next()){
+				points = rs.getInt("resource_points");
+			}
+
+		} catch (SQLException e) {
+			
+			System.err.println(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}return points;
+	}
 }

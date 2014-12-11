@@ -18,17 +18,26 @@ public class Main {
 	public static void main(String[] args) throws ClassNotFoundException {
 		//Class.forName("con.mysql.jdbc.driver");
 	Main m = new Main();
-	m.register("po","pop");
-//	m.register("second_user", "second_Pass");
-	m.login("po", "pop");
+//	m.register("dadd","pop");
+	m.register("je", "j");
+	m.register("la", "j");
+m.login("je", "j");
+System.out.println(m.viewPoints());
+System.out.println(m.getUserId());
+m.inviteUser("la");	
+m.acceptInvite();
+	//m.getUserId();
 //	m.login("ff", "ME");
-    m.getUser();
-	m.addmemory("dog");
-	m.addmemory("doggy");
-	//m.addmemory("anewmemory","dff");
-	System.out.println(m.viewMemories());
+//    m.getUser();
+//	m.addmemory("do");
+//	m.addmemory("doggwy");
+//	//m.addmemory("anewmemory","dff");
+//	System.out.println(m.viewMemories());
+		
+//	System.out.println(m.viewInvites());
 //	m.addResource("this is a rurce for a memory","thisM");
 	//m.deleteMemory("newmemory");
+	System.out.println(m.viewPoints());
 	}
 	
 
@@ -114,6 +123,37 @@ public class Main {
 		public String getUser(){
 			return currentUser;
 		}
+		
+		public Integer getUserId(){
+			Connection conn = null;
+			Statement stmt = null;
+			int result = 0;
+			
+			try{
+				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+		      stmt = conn.createStatement();
+		      String sql = "select U_ID from USERS "
+		      		+ "where username =  '"+getUser()+"'";
+		      ResultSet  rs = stmt.executeQuery(sql);
+		      while(rs.next()){
+				  
+				 result = rs.getInt(1);	          
+			   }
+			}
+		      catch(SQLException e){
+					System.err.println(e);
+				}finally{
+					if(conn != null){
+						try {
+							conn.close();
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}
+				}return result;
+			}
 		
 		public void addmemory(String memory){
 			Connection conn = null;
@@ -310,7 +350,157 @@ public class Main {
 			}return "Your current stored Memories are" + "\n"
 					+result;
 			}
-	}
+		
+		public void inviteUser(String fusername){
+			Connection conn = null;
+			Statement stmt = null;
+			
+			try{
+				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+		
+		      stmt = conn.createStatement();
+		      
+		      stmt = conn.createStatement();
+		      String sql = "INSERT INTO Friends(Sender_ID,Friend_ID,Request,status)" +
+	                  "VALUES ('"+getUserId()+"',(SELECT U_ID from Users where username = '"+fusername+"'),1,0)";
+		    		  
+		      stmt.executeUpdate(sql);
+			 
+			}
+			catch(SQLException e){
+				System.err.println(e);
+			}finally{
+				if(conn != null){
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+					
+				}
+				}
+		}
+		
+		public boolean viewInvites() {
+			Connection conn = null;
+			Statement stmt = null;
+			boolean flag = false;
+
+			try {
+				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+				stmt = conn.createStatement();
+
+				String sql = "Select request from friends "
+						+ "where FRIEND_ID = '"+getUserId()+"'";
+
+				ResultSet rs=stmt.executeQuery(sql);
+				while(rs.next()){
+					int id = rs.getInt("Request");
+					if(id !=0){
+						flag = true;
+					}
+					else {
+						flag = false;
+					}
+				}
+
+			} catch (SQLException e) {
+				
+				System.err.println(e);
+			} finally {
+				if (conn != null) {
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+
+				}
+			}return flag;
+		}
+		public void acceptInvite() {
+
+			Connection conn = null;
+			Statement stmt = null;
+
+			try {
+				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+				stmt = conn.createStatement();
+
+				String sql = " Update Friends "
+				+ "set status = 1";
+				//+ "where F_ID=1";
+				
+				stmt.executeUpdate(sql);
+				
+				stmt = conn.createStatement();
+				sql = "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID ="
+						+ " (SELECT Sender_Id FROM friends) ";
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					// Retrieve by column name
+					int points = rs.getInt("Resource_Points");
+					points = points + 10;
+					System.out.println(points + "mm");
+
+					sql = "UPDATE Users " + "SET Resource_Points = " + points + " "
+							+ "where U_ID = (SELECT Sender_ID FROM Friends )";
+				}
+				rs.close();
+				stmt.executeUpdate(sql);
+				
+
+			} catch (SQLException e) {
+				System.err.println(e);
+			} finally {
+				if (conn != null) {
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				}
+			}
+		}
+		public int viewPoints() {
+			Connection conn = null;
+			Statement stmt = null;
+			int points = 0;
+
+			try {
+				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+				stmt = conn.createStatement();
+
+				String sql = "Select resource_points from users "
+						+ "where U_ID = '"+getUserId()+"'";
+
+				ResultSet rs=stmt.executeQuery(sql);
+				while(rs.next()){
+					points = rs.getInt("resource_points");
+				}
+
+			} catch (SQLException e) {
+				
+				System.err.println(e);
+			} finally {
+				if (conn != null) {
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+
+				}
+			}return points;
+		}
+}
+		
+		
 
 
 
