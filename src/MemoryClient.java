@@ -81,9 +81,8 @@ public class MemoryClient {
 			do {
 				counter = 0;
 				System.out.println("Menu");
-				System.out
-						.println("1 Add Memory: 2 Add Resource to Memory: 3 Delete Memory:"
-								+ " 4 View Your Memories : 5 Invite a Friend: 6 View points: 8 Quit");
+				System.out.println("1 Add Memory: 2 Add Resource to Memory: 3 Share Memory 4 Delete Memory: 5 Delete Resource");
+				System.out.println(" 6 View Your Memories : 7 Invite a Friend: 8 View points: 9 Transfer Points : 0 Quit");
 				menuChoice = (char) (System.in.read());
 				userEntry.readLine(); // Need to clear the out the buffe
 				if (menuChoice == (char) '1') {
@@ -99,25 +98,44 @@ public class MemoryClient {
 					MemoryRef.addResource(resource, memory);
 				}
 				if (menuChoice == (char) '3') {
-					System.out
-							.println("Please enter The Memory you would like to remove");
+					System.out.println("Please enter The Memory you would like to Share");
+					String memory = userEntry.readLine();
+					System.out.println("Please enter The User You would like to share memory with1"
+							+ "");
+					String username = userEntry.readLine();
+					MemoryRef.shareMemory(memory,username);
+				}
+				if (menuChoice == (char) '4') {
+					System.out.println("Please enter The Memory you would like to remove");
 					String memory = userEntry.readLine();
 					MemoryRef.deleteMemory(memory);
 				}
-				if (menuChoice == (char) '4') {
+				if (menuChoice == (char) '5') {
+					System.out.println("Please enter a descrption of the resource you would like to delete");
+					String resource = userEntry.readLine();
+					MemoryRef.deleteResource(resource);
+				}
+				if (menuChoice == (char) '6') {
 					System.out.println(MemoryRef.viewMemories());
 				}
-				if (menuChoice == (char) '5') {
+				if (menuChoice == (char) '7') {
 					System.out.println("Please enter Your friends Name");
 					String friendUserName = userEntry.readLine();
 					MemoryRef.sendInvite(friendUserName);
 				}
-				if (menuChoice == (char) '6') {
-
+				if (menuChoice == (char) '8') {
 					System.out.println(MemoryRef.viewPoints());
 				}
+				if (menuChoice == (char) '9') {
+					System.out.println("Please enter the amount of points you would like to transfer");
+					String mypoints = userEntry.readLine();
+					int i = Integer.parseInt(mypoints);
+					System.out.println("Please enter the User you would like to award points to");
+					String username = userEntry.readLine();
+					MemoryRef.transferPoints(i,username);
+				}
 
-			} while (menuChoice != (char) '7');
+			} while (menuChoice != (char) '0');
 
 		} catch (Exception e) {
 			System.out.println("ERROR : " + e);

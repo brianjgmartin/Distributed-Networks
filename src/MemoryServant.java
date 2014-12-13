@@ -14,7 +14,7 @@ class MemoryServant extends _MemoryImplBase {
 	// Add the sayHello method here in the next step.
 	private static final String USERNAME = "root";
 	private static final String PASSWORD = "root";
-	private static final String CONN_STRING = "jdbc:mysql://localhost/MemoryCatcher";
+	private static final String CONN_STRING = "jdbc:mysql://localhost/myMemories";
 	public String currentUser = "";
 
 	public static void main(String[] args) throws ClassNotFoundException {
@@ -35,7 +35,7 @@ class MemoryServant extends _MemoryImplBase {
 			System.out.println("Inserting records into the table...");
 			stmt = conn.createStatement();
 
-			String sql = "INSERT INTO Users(USERNAME,PASSWD,RESOURCE_POINTS)"
+			String sql = "INSERT INTO Users(USERNAME,PASSWORD,RESOURCE_POINTS)"
 					+ "VALUES ('" + username + "','" + password + "',20)";
 			stmt.executeUpdate(sql);
 		}
@@ -105,7 +105,7 @@ class MemoryServant extends _MemoryImplBase {
 			stmt = conn.createStatement();
 
 			String sql = "SELECT * FROM Users WHERE USERNAME = '" + username
-					+ "'" + "and passwd = '" + password + "'";
+					+ "'" + "and password = '" + password + "'";
 
 			ResultSet rs = stmt.executeQuery(sql);
 			// System.out.println(rs);
@@ -483,4 +483,153 @@ rs.close();
 			}
 		}return points;
 	}
+	
+	public void deleteResource(String resource){
+		Connection conn = null;
+		Statement stmt = null;
+		try {
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+
+			stmt = conn.createStatement();
+
+			String sql = "DELETE FROM Resources " + "where resource like '" + resource
+					+ "'"
+					+ "and U_ID = (select U_ID from users where username ='"
+					+ getUser() + "')";
+			stmt.executeUpdate(sql);
+
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}
+	}
+
+	
+
+	public void shareMemory(String memory, String username){
+		Connection conn = null;
+		Statement stmt = null;
+		int points = 0;
+		try{
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+		System.out.println("connected Tble");
+		//STEP 4: Execute a query
+	      System.out.println("Inserting records into the Memory table...");
+	      stmt = conn.createStatement();
+	      
+	      String sql = "INSERT INTO Memories(Memory,U_ID) " +
+                   "VALUES ('"+memory+"',(Select U_ID from users where USERNAME = '"+username+"'))";
+	      stmt.executeUpdate(sql);
+	      
+	      stmt = conn.createStatement();
+	       sql = "Select resource_points from users "
+					+ "where USERNAME = '"+username+"'";
+	      	
+			ResultSet rs=stmt.executeQuery(sql);
+			while(rs.next()){
+			points = rs.getInt("resource_points");
+				points = points+5;
+			}
+		
+			stmt.executeQuery(sql);
+			rs.close();
+			
+			stmt = conn.createStatement();
+			 				
+			 sql = "UPDATE Users " +
+	                   "SET Resource_Points = "+points+" "
+	                   		+ "where USERNAME = '"+username+"'";
+	      stmt.executeUpdate(sql);
+	     
+		}
+		catch(SQLException e){
+			System.err.println(e);
+		}finally{
+			if(conn != null){
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+				
+			
+	public void transferPoints(int mypoints, String username){
+		int points = 0;
+		int userpoints = 0;
+		Connection conn = null;
+		Statement stmt = null;
+		try{
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+		
+//		  get User points and deduct by user input
+	      stmt = conn.createStatement();
+	      String sql = "Select resource_points from users "
+					+ "where U_ID = "+getUserID()+"";
+	      	
+			ResultSet rs=stmt.executeQuery(sql);
+			while(rs.next()){
+				points = rs.getInt("resource_points");
+				points = points-mypoints;
+			}
+		
+			stmt.executeQuery(sql);
+			rs.close();
+			
+			stmt = conn.createStatement();
+			 				
+			String sqli = "UPDATE Users " +
+	                   "SET Resource_Points = "+points+" "
+	                   		+ "where U_ID= '"+getUserID()+"'";
+	      stmt.executeUpdate(sqli);
+//	      -------------------------------------------
+	      
+//	      ------------Update Chosen User points-------
+	      stmt = conn.createStatement();
+	    String   sqll = "Select resource_points from users "
+					+ "where username = '"+username+"'";
+	      	
+			 rs=stmt.executeQuery(sqll);
+			while(rs.next()){
+				userpoints = rs.getInt("resource_points");
+				userpoints = userpoints+mypoints;
+			}
+		
+			stmt.executeQuery(sqll);
+			rs.close();
+			
+			stmt = conn.createStatement();
+//			 				
+		String sqlit = "UPDATE Users " +
+				 "SET Resource_Points = "+userpoints+" "
+            		+ "where USERNAME= '"+username+"'";
+		stmt.executeUpdate(sqlit);
+	      
+		}
+		catch(SQLException e){
+			System.err.println(e);
+		}finally{
+			if(conn != null){
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		}
+	}
+	
 }

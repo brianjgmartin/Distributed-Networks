@@ -12,35 +12,154 @@ public class Main {
 	private static final String USERNAME = "root";
 	private static final String PASSWORD = "root";
 	private static final String CONN_STRING =
-			"jdbc:mysql://localhost/MemoryCatcher";
+			"jdbc:mysql://localhost:3306/myMemories";
 	public String currentUser="";
 	
 	public static void main(String[] args) throws ClassNotFoundException {
 		//Class.forName("con.mysql.jdbc.driver");
 	Main m = new Main();
 //	m.register("dadd","pop");
-	m.register("je", "j");
-	m.register("la", "j");
-m.login("je", "j");
-System.out.println(m.viewPoints());
-System.out.println(m.getUserId());
-m.inviteUser("la");	
-m.acceptInvite();
-	//m.getUserId();
+//	m.register("jen", "j");
+//	m.register("lan", "j");
+m.login("pop", "pass");
+//System.out.println(m.viewPoints());
+//System.out.println(m.getUserId());
+//m.inviteUser("la");	
+//m.acceptInvite();
+	System.out.println(m.getUserId());
 //	m.login("ff", "ME");
 //    m.getUser();
-//	m.addmemory("do");
+//	m.addmemory("doss");
 //	m.addmemory("doggwy");
 //	//m.addmemory("anewmemory","dff");
 //	System.out.println(m.viewMemories());
-		
+	System.out.println(m.viewPoints());	
 //	System.out.println(m.viewInvites());
-//	m.addResource("this is a rurce for a memory","thisM");
+//	m.addResource("res","doss");
+//	m.deleteResource("res");
+//m.shareMemory("dos", "lan");
 	//m.deleteMemory("newmemory");
-	System.out.println(m.viewPoints());
+//	System.out.println(m.viewPoints());
+//	System.out.println(m.transferPoints(2,"jen"));
 	}
 	
+	public int transferPoints(int mypoints, String username){
+			int points = 0;
+			int userpoints = 0;
+			Connection conn = null;
+			Statement stmt = null;
+			try{
+				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+			
+//			  get User points and deduct by user input
+		      stmt = conn.createStatement();
+		      String sql = "Select resource_points from users "
+						+ "where U_ID = "+getUserId()+"";
+		      	
+				ResultSet rs=stmt.executeQuery(sql);
+				while(rs.next()){
+					points = rs.getInt("resource_points");
+					points = points-mypoints;
+				}
+			
+				stmt.executeQuery(sql);
+				rs.close();
+				
+				stmt = conn.createStatement();
+				 				
+				String sqli = "UPDATE Users " +
+		                   "SET Resource_Points = "+points+" "
+		                   		+ "where U_ID= '"+getUserId()+"'";
+		      stmt.executeUpdate(sqli);
+//		      -------------------------------------------
+		      
+//		      ------------Update Chosen User points-------
+		      stmt = conn.createStatement();
+		    String   sqll = "Select resource_points from users "
+						+ "where username = '"+username+"'";
+		      	
+				 rs=stmt.executeQuery(sqll);
+				while(rs.next()){
+					userpoints = rs.getInt("resource_points");
+					userpoints = userpoints+mypoints;
+				}
+			
+				stmt.executeQuery(sqll);
+				rs.close();
+				
+				stmt = conn.createStatement();
+//				 				
+			String sqlit = "UPDATE Users " +
+					 "SET Resource_Points = "+userpoints+" "
+                		+ "where USERNAME= '"+username+"'";
+			stmt.executeUpdate(sqlit);
+		      
+			}
+			catch(SQLException e){
+				System.err.println(e);
+			}finally{
+				if(conn != null){
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+				}
+			}return points + userpoints;
+		}	
 
+	public void shareMemory(String memory, String username){
+		Connection conn = null;
+		Statement stmt = null;
+		int points = 0;
+		try{
+			conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
+		System.out.println("connected Tble");
+		//STEP 4: Execute a query
+	      System.out.println("Inserting records into the Memory table...");
+	      stmt = conn.createStatement();
+	      
+	      String sql = "INSERT INTO Memories(Memory,U_ID) " +
+                   "VALUES ('"+memory+"',(Select U_ID from users where USERNAME = '"+username+"'))";
+	      stmt.executeUpdate(sql);
+	      
+	      stmt = conn.createStatement();
+	       sql = "Select resource_points from users "
+					+ "where USERNAME = '"+username+"'";
+	      	
+			ResultSet rs=stmt.executeQuery(sql);
+			while(rs.next()){
+			points = rs.getInt("resource_points");
+				points = points+5;
+			}
+		
+			stmt.executeQuery(sql);
+			rs.close();
+			
+			stmt = conn.createStatement();
+			 				
+			 sql = "UPDATE Users " +
+	                   "SET Resource_Points = "+points+" "
+	                   		+ "where USERNAME = '"+username+"'";
+	      stmt.executeUpdate(sql);
+	     
+		}
+		catch(SQLException e){
+			System.err.println(e);
+		}finally{
+			if(conn != null){
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		}
+	}
 	private  void register(String username , String password) {
 		// TODO Auto-generated method stub
 		Connection conn = null;
@@ -52,7 +171,7 @@ m.acceptInvite();
 		//STEP 4: Execute a query
 	      System.out.println("Inserting records into the table...");  
 	      stmt = conn.createStatement();
-	      String sql = "INSERT INTO Users(USERNAME,PASSWD,RESOURCE_POINTS)" +
+	      String sql = "INSERT INTO Users(USERNAME,PASSWORD,RESOURCE_POINTS)" +
                   "VALUES ('"+username+"','"+password+"',20)";
 	    		  
 	      stmt.executeUpdate(sql);
@@ -77,17 +196,15 @@ m.acceptInvite();
 			Connection conn = null;
 			Statement stmt = null;
 			currentUser = username;
-			System.out.println(currentUser);
+			
 			boolean log = false;
 			try{
 				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
-			System.out.println("connected Tble");
-			//STEP 4: Execute a query
-		      System.out.println("Login...");
+			
 		      stmt = conn.createStatement();
 
 		      String sql = "SELECT * FROM Users WHERE USERNAME = '"+username+"'"
-			      		+ "and passwd = '"+password+"'";
+			      		+ "and password = '"+password+"'";
 		      				
 		      ResultSet rs=stmt.executeQuery(sql);
 		      //System.out.println(rs);
@@ -161,8 +278,7 @@ m.acceptInvite();
 			try{
 				conn = DriverManager.getConnection(CONN_STRING, USERNAME, PASSWORD);
 			System.out.println("connected Tble");
-			//STEP 4: Execute a query
-		      System.out.println("Inserting records into the Memory table...");
+			
 		      stmt = conn.createStatement();
 		      
 		      String sql = "INSERT INTO Memories(Memory,U_ID) " +
@@ -197,7 +313,7 @@ m.acceptInvite();
 		      stmt = conn.createStatement();
 		      String sql =  "SELECT RESOURCE_POINTS FROM USERS WHERE U_ID = (SELECT U_ID FROM Memories where Memory = '"+memory+"') ";
 		     
-		    //  System.out.println(stmt.executeUpdate(sql));
+		   
 		      
 		      ResultSet rs = stmt.executeQuery(sql);
 		      while(rs.next()){
@@ -498,6 +614,7 @@ m.acceptInvite();
 				}
 			}return points;
 		}
+		
 }
 		
 		
