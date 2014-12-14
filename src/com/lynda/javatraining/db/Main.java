@@ -33,7 +33,6 @@ m.login("pop", "pass");
 //	m.addmemory("doggwy");
 //	//m.addmemory("anewmemory","dff");
 //	System.out.println(m.viewMemories());
-	System.out.println(m.viewPoints());	
 //	System.out.println(m.viewInvites());
 //	m.addResource("res","doss");
 //	m.deleteResource("res");
